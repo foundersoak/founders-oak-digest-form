@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#2c5f3f">
+<title>Deal Flow Digest — Select for NDA</title>
+<style>
+  :root { --paper: #fbf9f4; --forest: #2c5f3f; --gold: #8a6d3b; --ink: #2a2a2a; --muted: #666; --line: #e8e2d3; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+    background: var(--paper);
+    color: var(--ink);
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 20px;
+    line-height: 1.5;
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: rgba(44,95,63,0.1);
+  }
+  h1 { color: var(--forest); margin: 0 0 6px 0; font-weight: 600; font-size: 24px; line-height: 1.25; }
+  .subhead { color: var(--muted); margin-bottom: 16px; font-size: 14px; }
+  .submit-bar {
+    position: sticky;
+    top: 0;
+    background: var(--paper);
+    padding: 14px 0;
+    border-bottom: 2px solid var(--forest);
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+  }
+  button {
+    padding: 12px 22px;
+    font-size: 15px;
+    background: var(--forest);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    min-height: 44px;
+    touch-action: manipulation;
+    -webkit-appearance: none;
+  }
+  button:hover:not(:disabled), button:active:not(:disabled) { background: #1f4830; }
+  button:disabled { background: #b5b5b5; cursor: not-allowed; }
+  .count { color: var(--muted); font-size: 14px; }
+  .listing {
+    padding: 14px 0;
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  .listing.high {
+    background: linear-gradient(to right, rgba(138,109,59,0.10), transparent 70%);
+    padding-left: 12px;
+    margin-left: -12px;
+    border-left: 4px solid var(--gold);
+  }
+  .listing input[type=checkbox] {
+    width: 24px;
+    height: 24px;
+    margin-top: 2px;
+    cursor: pointer;
+    flex-shrink: 0;
+    accent-color: var(--forest);
+    touch-action: manipulation;
+  }
+  .listing label {
+    cursor: pointer;
+    flex: 1;
+    min-width: 0;
+  }
+  .title-row {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .title {
+    font-weight: 600;
+    color: var(--ink);
+    word-break: break-word;
+  }
+  .tag {
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    flex-shrink: 0;
+  }
+  .tag-high { background: var(--gold); color: white; }
+  .tag-std { background: #ddd; color: var(--muted); }
+  .meta {
+    color: var(--muted);
+    font-size: 13px;
+    margin-top: 4px;
+    word-break: break-word;
+  }
+  .listing-url {
+    display: inline-block;
+    color: var(--forest);
+    text-decoration: none;
+    font-size: 13px;
+    padding: 6px 0;
+    margin-top: 2px;
+  }
+  .listing-url:hover, .listing-url:active { text-decoration: underline; }
+  .empty { padding: 60px 20px; text-align: center; color: var(--muted); font-size: 16px; }
+  .footer-note { color: var(--muted); font-size: 12px; margin-top: 24px; padding-top: 12px; border-top: 1px solid var(--line); }
+
+  /* Mobile / small screens */
+  @media (max-width: 600px) {
+    body { padding: 14px; }
+    h1 { font-size: 20px; }
+    .submit-bar { padding: 12px 0; gap: 12px; }
+    button { padding: 12px 18px; font-size: 14px; width: auto; flex: 1; min-width: 140px; }
+    .listing { padding: 12px 0; gap: 10px; }
+    .listing.high { padding-left: 10px; margin-left: -10px; }
+    .title { font-size: 15px; }
+    .meta { font-size: 12px; }
+    .footer-note { font-size: 11px; }
+  }
+
+  /* Dark mode respect (matches Founders' Oak palette but tones for dark) */
+  @media (prefers-color-scheme: dark) {
+    :root { --paper: #1a1816; --ink: #ece8df; --muted: #999; --line: #2e2a24; }
+    .tag-std { background: #3a3530; color: #aaa; }
+    button:disabled { background: #444; }
+  }
+</style>
+</head>
+<body>
+<h1>Deal Flow Digest — Select for NDA</h1>
+<div class="subhead">Run date: 2026-05-25 · 5 new listing(s)</div>
+<div class="submit-bar">
+  <button id="submitBtn" onclick="submitSelected()" disabled>Submit Selected →</button>
+  <span class="count" id="count">0 selected</span>
+</div>
+<div id="listings"></div>
+<div class="footer-note">After clicking Submit, a Gmail compose window opens with the selected IDs already in the body. Just click Send. The NDA processor picks the reply up on its next run.</div>
+
+<script>
+const LISTINGS = [{"productId": "2382600", "title": "Huge Cash Cow Metal Fabrication Business", "location": "Harris County, TX", "askingPrice": "$17,990,000", "cashFlow": "$6,403,708", "industry": "Manufacturing", "priority": "HIGH", "url": "https://www.bizbuysell.com/business-opportunity/metal-fab/2382600/"}, {"productId": "2509540", "title": "Established 30+ Year Commercial Plumbing & HVAC Company", "location": "Williamson County, TX", "askingPrice": "$3,500,000", "cashFlow": "$1,200,000", "industry": "Trades & Home Services", "priority": "HIGH", "url": "https://www.bizbuysell.com/business-opportunity/established-30-year-commercial-plumbing-and-hvac-company/2509540/"}, {"productId": "2509861", "title": "Profitable Independent Restoration Company", "location": "Tulsa, OK", "askingPrice": "$2,100,000", "cashFlow": "$850,000", "industry": "Trades & Home Services", "priority": "HIGH", "url": "https://www.bizbuysell.com/business-opportunity/profitable-restoration/2509861/"}, {"productId": "2509726", "title": "Surrogacy Consulting Agency w/ US & Intl Clientele", "location": "Phoenix, AZ", "askingPrice": "$1,800,000", "cashFlow": "$650,000", "industry": "Professional Services", "priority": "STANDARD", "url": "https://www.bizbuysell.com/business-opportunity/surrogacy/2509726/"}, {"productId": "2151491", "title": "Home Improvement & Decor", "location": "Bonita Springs, FL", "askingPrice": "$5,000,000", "cashFlow": "Not Disclosed", "industry": "Retail", "priority": "STANDARD", "url": "https://www.bizbuysell.com/business-opportunity/home-improvement/2151491/"}];
+const SUBJECT = 'Re: Deal Flow Digest';
+const TO = 'thomas@founders-oak.com';
+
+function esc(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  })[c]);
+}
+
+function render() {
+  const container = document.getElementById('listings');
+  if (!LISTINGS.length) {
+    container.innerHTML = '<div class="empty">No new listings this run — nothing to select.</div>';
+    return;
+  }
+  container.innerHTML = LISTINGS.map(l => `
+    <div class="listing ${l.priority === 'HIGH' ? 'high' : ''}">
+      <input type="checkbox" id="cb-${esc(l.productId)}" value="${esc(l.productId)}" onchange="updateCount()">
+      <label for="cb-${esc(l.productId)}">
+        <div class="title-row">
+          <span class="title">${esc(l.title)}</span>
+          <span class="tag ${l.priority === 'HIGH' ? 'tag-high' : 'tag-std'}">${esc(l.priority || 'STANDARD')}</span>
+        </div>
+        <div class="meta">
+          ID ${esc(l.productId)} · ${esc(l.location || '')}${l.industry ? ' · ' + esc(l.industry) : ''}
+        </div>
+        <div class="meta">
+          Price: ${esc(l.askingPrice || 'Not Disclosed')} · Cash Flow: ${esc(l.cashFlow || 'Not Disclosed')}
+        </div>
+        ${l.url ? `<a class="listing-url" href="${esc(l.url)}" target="_blank" rel="noopener">View on BizBuySell →</a>` : ''}
+      </label>
+    </div>
+  `).join('');
+}
+
+function updateCount() {
+  const n = document.querySelectorAll('input[type=checkbox]:checked').length;
+  document.getElementById('count').textContent = `${n} selected`;
+  document.getElementById('submitBtn').disabled = (n === 0);
+}
+
+function submitSelected() {
+  const ids = Array.from(document.querySelectorAll('input[type=checkbox]:checked')).map(el => el.value);
+  if (!ids.length) {
+    alert('Select at least one listing first.');
+    return;
+  }
+  const body = encodeURIComponent('Process these listing IDs for NDA:\n\n' + ids.join('\n'));
+  const subject = encodeURIComponent(SUBJECT);
+  const to = encodeURIComponent(TO);
+  const url = `https://mail.google.com/mail/?authuser=${to}&view=cm&fs=1&to=${to}&su=${subject}&body=${body}`;
+  window.open(url, '_blank');
+}
+
+render();
+updateCount();
+</script>
+</body>
+</html>
