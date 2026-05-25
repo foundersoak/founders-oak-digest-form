@@ -100,6 +100,14 @@
   }
   .tag-high { background: var(--gold); color: white; }
   .tag-std { background: #ddd; color: var(--muted); }
+  .age {
+    font-size: 10px;
+    color: var(--muted);
+    font-style: italic;
+  }
+  .age-today { color: var(--forest); font-weight: 600; font-style: normal; }
+  .age-recent { color: var(--muted); }
+  .age-stale { color: #c75c2c; }
   .meta {
     color: var(--muted);
     font-size: 13px;
@@ -166,6 +174,19 @@ function render() {
     container.innerHTML = '<div class="empty">No new listings this run — nothing to select.</div>';
     return;
   }
+  const today = new Date().toISOString().slice(0, 10);
+  function ageBadge(dateStr) {
+    if (!dateStr) return '';
+    if (dateStr === today) return '<span class="age age-today">Added today</span>';
+    // Try to compute days-ago
+    const d = new Date(dateStr);
+    if (isNaN(d)) return `<span class="age">Added ${esc(dateStr)}</span>`;
+    const days = Math.round((new Date(today) - d) / 86400000);
+    if (days <= 0) return '<span class="age age-today">Added today</span>';
+    if (days === 1) return '<span class="age age-recent">Added yesterday</span>';
+    if (days <= 7) return `<span class="age age-recent">Added ${days} days ago</span>`;
+    return `<span class="age age-stale">Added ${days} days ago</span>`;
+  }
   container.innerHTML = LISTINGS.map(l => `
     <div class="listing ${l.priority === 'HIGH' ? 'high' : ''}">
       <input type="checkbox" id="cb-${esc(l.productId)}" value="${esc(l.productId)}" onchange="updateCount()">
@@ -173,6 +194,7 @@ function render() {
         <div class="title-row">
           <span class="title">${esc(l.title)}</span>
           <span class="tag ${l.priority === 'HIGH' ? 'tag-high' : 'tag-std'}">${esc(l.priority || 'STANDARD')}</span>
+          ${ageBadge(l.date_added)}
         </div>
         <div class="meta">
           ID ${esc(l.productId)} · ${esc(l.location || '')}${l.industry ? ' · ' + esc(l.industry) : ''}
