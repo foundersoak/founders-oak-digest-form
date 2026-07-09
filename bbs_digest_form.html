@@ -22,6 +22,14 @@
   }
   h1 { color: var(--forest); margin: 0 0 6px 0; font-weight: 600; font-size: 24px; line-height: 1.25; }
   .subhead { color: var(--muted); margin-bottom: 16px; font-size: 14px; }
+  .group-label {
+    margin: 26px 0 2px; padding-bottom: 6px; font-size: 12px; font-weight: 700;
+    letter-spacing: .05em; text-transform: uppercase; color: var(--forest);
+    border-bottom: 2px solid var(--forest);
+  }
+  .group-label:first-child { margin-top: 2px; }
+  .group-label.carried { color: var(--muted); border-bottom-color: var(--line); }
+  .group-sub { font-weight: 400; text-transform: none; letter-spacing: 0; color: var(--muted); }
   .submit-bar {
     position: sticky;
     top: 0;
@@ -161,7 +169,7 @@
 </head>
 <body>
 <h1>Deal Flow Digest — Select for NDA</h1>
-<div class="subhead">Run date: 2026-07-08 · 52 new listing(s)</div>
+<div class="subhead">Run date: 2026-07-08 · 9 new this run · 43 carried over</div>
 <div class="submit-bar">
   <button id="submitBtn" onclick="submitSelected()" disabled>Submit Selected →</button>
   <span class="count" id="count">0 selected</span>
@@ -248,7 +256,7 @@ function render() {
     if (days <= 7) return `<span class="age age-recent">Added ${days} days ago</span>`;
     return `<span class="age age-stale">Added ${days} days ago</span>`;
   }
-  container.innerHTML = LISTINGS.map(l => {
+  function card(l) {
     const isSubmitted = !!submittedMap[l.productId];
     return `
     <div class="listing ${l.priority === 'HIGH' ? 'high' : ''}${isSubmitted ? ' submitted' : ''}">
@@ -270,7 +278,20 @@ function render() {
       </label>
     </div>
   `;
-  }).join('');
+  }
+  // Newest (this run) first, clearly separated from carried-over listings.
+  const newOnes = LISTINGS.filter(l => l.is_new === true);
+  const carried = LISTINGS.filter(l => l.is_new !== true);
+  let html = '';
+  if (newOnes.length) {
+    html += `<div class="group-label">New this run <span class="group-sub">(${newOnes.length})</span></div>`;
+    html += newOnes.map(card).join('');
+  }
+  if (carried.length) {
+    html += `<div class="group-label carried">Carried over — still pending <span class="group-sub">(${carried.length})</span></div>`;
+    html += carried.map(card).join('');
+  }
+  container.innerHTML = html;
 }
 
 function updateCount() {
