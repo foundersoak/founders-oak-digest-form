@@ -169,7 +169,7 @@
 </head>
 <body>
 <h1>Backlog Review: Select for NDA</h1>
-<div class="subhead">One-time backlog review · 1,204 confirmed $750k+ SDE/EBITDA listings · 44 sources · check the ones worth pursuing, then Submit</div>
+<div class="subhead">One-time backlog review · 1,204 confirmed $750k+ SDE/EBITDA listings · 44 sources · check what's worth pursuing and Submit (sends up to 30 per email so nothing gets cut off on mobile)</div>
 <div class="submit-bar">
   <button id="submitBtn" onclick="submitSelected()" disabled>Submit Selected →</button>
   <span class="count" id="count">0 selected</span>
@@ -187,6 +187,10 @@ const SUBJECT = 'Re: Deal Flow Digest';
 const TO = 'thomas@founders-oak.com';
 const STORAGE_KEY = 'bbs_submitted_ids';
 const REQUEST_TTL_HOURS = 24;
+// Cap IDs per submit so a mailto/compose email never overflows the mail app's URL
+// length limit (which silently drops IDs on mobile). Only bites big backlog-review
+// selections; a normal daily digest selection is far under this.
+const SUBMIT_BATCH = 30;
 
 function esc(s) {
   return String(s ?? '').replace(/[&<>"']/g, c => ({
@@ -304,28 +308,35 @@ function updateCount() {
 }
 
 function submitSelected() {
-  const ids = Array.from(document.querySelectorAll('input[type=checkbox]:checked')).map(el => el.value);
-  if (!ids.length) {
+  const boxes = Array.from(document.querySelectorAll('input[type=checkbox]:checked'));
+  if (!boxes.length) {
     alert('Select at least one listing first.');
     return;
   }
-  // Save before opening compose so localStorage is updated even if user
-  // navigates away. If they cancel out of the compose without sending,
-  // a "Reset" button at the bottom of the page lets them clear it.
+  // Send in mobile-safe batches. A mailto/compose URL packed with many long IDs
+  // gets truncated by the mail app, silently dropping selections. So send at most
+  // SUBMIT_BATCH per email; uncheck the ones we send (and mark them Requested) so
+  // the next tap sends the next batch. Nothing is ever dropped silently.
+  const batch = boxes.slice(0, SUBMIT_BATCH);
+  const ids = batch.map(el => el.value);
+  const remaining = boxes.length - batch.length;
   markIdsAsSubmitted(ids);
+  batch.forEach(el => { el.checked = false; });
+  updateCount();
+  if (remaining > 0) {
+    alert('Sending ' + ids.length + ' now (the most that fits in one email so nothing gets cut off). '
+      + remaining + ' still selected. After you send this email, come back and tap Submit again for the next batch.');
+  }
   const body = encodeURIComponent('Process these listing IDs for NDA:\n\n' + ids.join('\n'));
   const subject = encodeURIComponent(SUBJECT);
   // Mobile: mailto: opens the native mail app (Gmail iOS/Android, iOS Mail, etc.) with body pre-filled.
   // Desktop: Gmail compose URL (no handler config required).
   const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-  let url;
   if (isMobile) {
-    url = `mailto:${TO}?subject=${subject}&body=${body}`;
-    window.location.href = url;
+    window.location.href = `mailto:${TO}?subject=${subject}&body=${body}`;
   } else {
     const to = encodeURIComponent(TO);
-    url = `https://mail.google.com/mail/?authuser=${to}&view=cm&fs=1&to=${to}&su=${subject}&body=${body}`;
-    window.open(url, '_blank');
+    window.open(`https://mail.google.com/mail/?authuser=${to}&view=cm&fs=1&to=${to}&su=${subject}&body=${body}`, '_blank');
   }
 }
 
